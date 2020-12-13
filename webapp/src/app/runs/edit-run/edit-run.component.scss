@@ -1,0 +1,44 @@
+:host {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.card {
+  max-width: 600px;
+  margin: 12px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+.action {
+  display: flex;
+  justify-content: space-between;
+}
+
+.with-buttons {
+  display: flex;
+
+  .mat-form-field {
+    width: 100%;
+  }
+
+  .mat-icon-button {
+    transform: scale(1.5);
+    margin: 0 6px;
+  }
+}
+
+
+
+app-stop-watch {
+  margin-bottom: 12px;
+}
+
+.try-add-actions {
+  justify-content: flex-end;
+  display: flex;
+}

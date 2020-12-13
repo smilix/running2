@@ -1,0 +1,5 @@
+target/
+webapp_build/
+.idea/
+.env
+*.db*
