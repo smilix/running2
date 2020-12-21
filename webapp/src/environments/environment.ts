@@ -4,9 +4,8 @@
 
 export const environment = {
   production: false,
-  // backendPath: 'http://192.168.1.175:8080/api',
-  // backendPath: 'http://0.0.0.0:8080/api',
-  backendPath: 'http://0.0.0.0:5000/api',
+  backendPath: 'http://192.168.1.175:5000/api',
+  // backendPath: 'http://0.0.0.0:5000/api',
 };
 
 /*
