@@ -8,6 +8,7 @@ import {ListShoesComponent} from "./shoes/list-shoes/list-shoes.component";
 import {EditShoeComponent} from "./shoes/edit-shoe/edit-shoe.component";
 import {OverviewComponent} from "./stats/overview/overview.component";
 import {MonthlyComponent} from "./stats/monthly/monthly.component";
+import {DetailsComponent} from "./stats/details/details.component";
 
 
 const routes: Routes = [
@@ -15,6 +16,7 @@ const routes: Routes = [
     path: '', canActivate: [SessionGuard], children: [
       {path: 'stats/overview', component: OverviewComponent},
       {path: 'stats/monthly', component: MonthlyComponent},
+      {path: 'stats/details', component: DetailsComponent},
       {path: 'runs', component: ListRunsComponent},
       {path: 'runs/edit/:id', component: EditRunComponent},
       {path: 'shoes', component: ListShoesComponent},

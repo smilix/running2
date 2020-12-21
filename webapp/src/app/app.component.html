@@ -18,6 +18,7 @@
       <mat-nav-list (click)="checkClose()">
         <ng-container *ngIf="sessionQuery.hasSession$ | async; else loginBlock">
           <a mat-list-item routerLink="stats/overview" routerLinkActive="nav-selected">Overview</a>
+          <a mat-list-item routerLink="stats/details" routerLinkActive="nav-selected">Details</a>
           <a mat-list-item routerLink="runs" routerLinkActive="nav-selected">Runs</a>
           <a mat-list-item routerLink="shoes" routerLinkActive="nav-selected">Shoes</a>
           <a mat-list-item routerLink="runs/edit/-">Add run</a>

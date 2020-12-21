@@ -8,10 +8,11 @@ import {SharedModule} from "../shared/shared.module";
 import {RouterModule} from "@angular/router";
 import {MatButtonModule} from "@angular/material/button";
 import {SimpleStatsTableComponent} from "./simple-stats-table/simple-stats-table.component";
+import { DetailsComponent } from './details/details.component';
 
 
 @NgModule({
-  declarations: [OverviewComponent, MonthlyComponent, SimpleStatsTableComponent],
+  declarations: [OverviewComponent, MonthlyComponent, SimpleStatsTableComponent, DetailsComponent],
   imports: [
     CommonModule,
     MatCardModule,
