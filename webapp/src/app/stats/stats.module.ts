@@ -9,6 +9,8 @@ import {RouterModule} from "@angular/router";
 import {MatButtonModule} from "@angular/material/button";
 import {SimpleStatsTableComponent} from "./simple-stats-table/simple-stats-table.component";
 import { DetailsComponent } from './details/details.component';
+import {MatFormFieldModule} from "@angular/material/form-field";
+import {MatSelectModule} from "@angular/material/select";
 
 
 @NgModule({
@@ -19,7 +21,9 @@ import { DetailsComponent } from './details/details.component';
     MatTableModule,
     SharedModule,
     RouterModule,
-    MatButtonModule
+    MatButtonModule,
+    MatFormFieldModule,
+    MatSelectModule
   ]
 })
 export class StatsModule {

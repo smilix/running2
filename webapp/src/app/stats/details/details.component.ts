@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, OnInit} from '@angular/core';
+import {AfterViewInit, Component, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {RunsQuery} from "../../runs/state/runs.query";
 import {RunsService} from "../../runs/state/runs.service";
 
@@ -6,6 +6,16 @@ import * as am4core from "@amcharts/amcharts4/core";
 import * as am4charts from "@amcharts/amcharts4/charts";
 import am4themes_animated from "@amcharts/amcharts4/themes/animated";
 import {UntilDestroy, untilDestroyed} from "@ngneat/until-destroy";
+import {MatOption} from "@angular/material/core";
+import {MatSelect} from "@angular/material/select";
+import {filter, map, startWith, switchMap} from "rxjs/operators";
+import {MatSelectChange} from "@angular/material/select/select";
+
+interface DateRange {
+  label: string;
+  startDate: number; // timestamp in sec
+
+}
 
 @UntilDestroy()
 @Component({
@@ -13,7 +23,15 @@ import {UntilDestroy, untilDestroyed} from "@ngneat/until-destroy";
   templateUrl: './details.component.html',
   styleUrls: ['./details.component.scss']
 })
-export class DetailsComponent implements OnInit, AfterViewInit {
+export class DetailsComponent implements OnInit, AfterViewInit, OnDestroy {
+
+  readonly dateRanges: DateRange[] = [];
+  selectedDateRange: DateRange;
+
+  @ViewChild('dateRange')
+  dateRangeComponent: MatSelect
+
+  private chart: am4charts.XYChart;
 
   constructor(
     private runsQuery: RunsQuery,
@@ -23,67 +41,124 @@ export class DetailsComponent implements OnInit, AfterViewInit {
   ngOnInit(): void {
     this.runsService.load();
 
+    this.dateRanges.push({
+      label: "All",
+      startDate: new Date(2000, 0, 1).getTime() / 1000
+    });
 
+    const last5Years = new Date();
+    last5Years.setFullYear(last5Years.getFullYear() - 5);
+    this.dateRanges.push({
+      label: "Last 5 Years",
+      startDate: last5Years.getTime() / 1000
+    });
+
+    const last6Months = new Date();
+    last6Months.setMonth(last6Months.getMonth() - 6);
+    this.dateRanges.push({
+      label: "Last 6 Months",
+      startDate: last6Months.getTime() / 1000
+    });
+
+    this.selectedDateRange = this.dateRanges[this.dateRanges.length - 1];
   }
 
   ngAfterViewInit(): void {
-    am4core.useTheme(am4themes_animated);
-    this.runsQuery.allRunsSorted$.pipe(untilDestroyed(this)).subscribe(runs => {
+
+    const startDateObs = this.dateRangeComponent.selectionChange.pipe(
+      map((event: MatSelectChange) => (event.value as DateRange).startDate),
+      startWith(this.selectedDateRange.startDate)
+    )
+
+    // am4core.useTheme(am4themes_animated);
+    this.runsQuery.allRunsSorted$.pipe(
+      untilDestroyed(this),
+      filter(r => r.length > 0),
+      switchMap(runs => startDateObs.pipe(map(startDate => ({runs, startDate}))))
+    ).subscribe(({runs, startDate}) => {
+      // console.log('got runs', runs, 'and start at', startDate);
+
+      if (this.chart != null) {
+        this.chart.dispose();
+      }
 
       // Create chart instance
-      let chart = am4core.create("chartdiv", am4charts.XYChart);
+      this.chart = am4core.create('chartdiv', am4charts.XYChart);
 
-      const minDate = new Date(2010, 0, 1).getTime() / 1000;
-
-      chart.data = runs
-        .filter(run => run.date > minDate)
+      this.chart.data = runs
+        .filter(run => run.date > startDate)
         .map(run => {
-        return {
-          date: run.date * 1000, length: run.length, timePerKm: run.timeUsed / run.length * 1000
-        };
-      });
-
-// Add data
-//       chart.data = [
-//         {date: new Date(2019, 5, 12), value1: 50, value2: 48, previousDate: new Date(2019, 5, 5)},
-//         {date: new Date(2019, 5, 13), value1: 53, value2: 51, previousDate: new Date(2019, 5, 6)},
-//         {date: new Date(2019, 5, 14), value1: 56, value2: 58, previousDate: new Date(2019, 5, 7)},
-//         {date: new Date(2019, 5, 15), value1: 52, value2: 53, previousDate: new Date(2019, 5, 8)},
-//         {date: new Date(2019, 5, 16), value1: 48, value2: 44, previousDate: new Date(2019, 5, 9)},
-//         {date: new Date(2019, 5, 17), value1: 47, value2: 42, previousDate: new Date(2019, 5, 10)},
-//         {date: new Date(2019, 5, 18), value1: 59, value2: 55, previousDate: new Date(2019, 5, 11)}
-//       ]
-
-// Create axes
-      let dateAxis = chart.xAxes.push(new am4charts.DateAxis());
-      dateAxis.renderer.minGridDistance = 50;
-
-      let valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
-
-// Create series
-      let series = chart.series.push(new am4charts.LineSeries());
-      series.dataFields.valueY = "length";
-      series.dataFields.dateX = "date";
-      series.strokeWidth = 2;
-      series.minBulletDistance = 10;
-      series.tooltipText = "[bold]{date.formatDate()}:[/] {value1}\n[bold]{previousDate.formatDate()}:[/] {value2}";
-      series.tooltip.pointerOrientation = "vertical";
-
-// Create series
-      let series2 = chart.series.push(new am4charts.LineSeries());
-      series2.dataFields.valueY = "timePerKm";
-      series2.dataFields.dateX = "date";
-      series2.strokeWidth = 2;
-      series2.strokeDasharray = "3,4";
-      series2.stroke = series.stroke;
-
-// Add cursor
-      chart.cursor = new am4charts.XYCursor();
-      chart.cursor.xAxis = dateAxis;
+          return {
+            date: run.date * 1000, length: run.length / 1000, timePerKm: run.timeUsed / run.length * 1000
+          };
+        })
+        .reverse();
 
 
+      const dateAxis = this.chart.xAxes.push(new am4charts.DateAxis());
+      // dateAxis.renderer.minGridDistance = 50;
+
+      // Distance on bar chart
+      const distanceValueAxis = this.chart.yAxes.push(new am4charts.ValueAxis());
+      distanceValueAxis.title.text = 'Distance (km)';
+      distanceValueAxis.renderer.tooltip.disabled = true;
+      distanceValueAxis.renderer.grid.template.disabled = true;
+      distanceValueAxis.renderer.grid.template.location = 0;
+
+      const distanceSeries = this.chart.series.push(new am4charts.ColumnSeries());
+      distanceSeries.dataFields.valueY = "length";
+      distanceSeries.dataFields.dateX = "date";
+      distanceSeries.xAxis = dateAxis;
+      distanceSeries.yAxis = distanceValueAxis;
+      distanceSeries.tooltip.disabled = true;
+
+      // time per km on line chart
+      const perKmValueAxis = this.chart.yAxes.push(new am4charts.DurationAxis());
+      perKmValueAxis.title.text = 'Time per km';
+      perKmValueAxis.renderer.opposite = true;
+      perKmValueAxis.syncWithAxis = distanceValueAxis;
+      perKmValueAxis.baseUnit = 'second';
+      perKmValueAxis.renderer.tooltip.disabled = true;
+      perKmValueAxis.renderer.grid.template.disabled = true;
+      perKmValueAxis.renderer.grid.template.location = 0;
+
+      const perKmSeries = this.chart.series.push(new am4charts.LineSeries());
+      perKmSeries.dataFields.valueY = "timePerKm";
+      perKmSeries.dataFields.dateX = "date";
+      perKmSeries.xAxis = dateAxis;
+      perKmSeries.yAxis = perKmValueAxis;
+      perKmSeries.strokeWidth = 2;
+      perKmSeries.tooltipText = "{dateX.formatDate('dd.MM.yyyy HH:mm')}\nper km: [bold]{valueY.formatDuration()}[/]\nDistance: [bold]{length}[/]";
+
+      // Add cursor
+      const cursor = new am4charts.XYCursor();
+      cursor.xAxis = dateAxis;
+      cursor.behavior = 'panX';
+      cursor.lineY.disabled = true;
+      cursor.fullWidthLineX = true;
+      cursor.lineX.strokeWidth = 0;
+      cursor.lineX.fill = am4core.color("#8F3985");
+      cursor.lineX.fillOpacity = 0.1;
+      this.chart.cursor = cursor;
+
+      const scrollbar = new am4charts.XYChartScrollbar();
+      scrollbar.series.push(distanceSeries);
+      scrollbar.series.push(perKmSeries);
+      // calculate the position of 2 weeks ago in a relative number (0-1)
+      const twoWeeksInMs = 2 * 7 * 24 * 60 * 60 * 1000;
+      const totalMs = Date.now() - this.chart.data[0].date;
+      const twoWeeksRelative = twoWeeksInMs / totalMs;
+      scrollbar.start = 1 - twoWeeksRelative;
+      // console.log(twoWeeksInMs, Date.now(), this.chart.data[0].date, totalMs, twoWeeksInMs, twoWeeksRelative);
+      this.chart.scrollbarX = scrollbar;
     });
 
+  }
+
+  ngOnDestroy(): void {
+    if (this.chart != null) {
+      this.chart.dispose();
+    }
   }
 
 

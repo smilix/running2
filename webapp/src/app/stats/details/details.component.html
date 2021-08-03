@@ -1,3 +1,14 @@
-<p>details works!</p>
-
 <div id="chartdiv">...</div>
+
+<div class="top-bar">
+  <mat-form-field appearance="fill">
+    <mat-label>Data range</mat-label>
+    <mat-select [(value)]="selectedDateRange" #dateRange>
+      <mat-option *ngFor="let range of dateRanges" [value]="range">
+        {{range.label}}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+</div>
+
+
