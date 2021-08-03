@@ -62,9 +62,7 @@ export class StatsService {
         let newDay = date.getDate() - weekDay;
         return new Date(date.getFullYear(), date.getMonth(), newDay);
       },
-      (date) => {
-        return new Date(date.getTime() - WEEK_IN_MS);
-      },
+      (date) => new Date(date.getTime() - WEEK_IN_MS),
       (date) => {
         let weekEnd = new Date(date.getTime() + WEEK_IN_MS);
         return this.datePipe.transform(date, WEEK_FORMAT) +
@@ -75,15 +73,9 @@ export class StatsService {
 
   makeMonthlyStats(runs: Run[], limit = 6) {
     return this.makeIntervalStats(runs, limit,
-      (date) => {
-        return new Date(date.getFullYear(), date.getMonth(), 1);
-      },
-      (date) => {
-        return new Date(date.getFullYear(), date.getMonth() - 1, 1);
-      },
-      (date) => {
-        return this.datePipe.transform(date, 'MMMM');
-      }
+      (date) => new Date(date.getFullYear(), date.getMonth(), 1),
+      (date) => new Date(date.getFullYear(), date.getMonth() - 1, 1),
+      (date) => this.datePipe.transform(date, 'MMMM YYYY')
     );
   }
 
@@ -94,15 +86,9 @@ export class StatsService {
     let lastEntry = runs[runs.length - 1];
     let yearDelta = new Date().getFullYear() - new Date(serverToClientTime(lastEntry.date)).getFullYear();
     return this.makeIntervalStats(runs, yearDelta + 1,
-      (date) => {
-        return new Date(date.getFullYear(), 0, 1);
-      },
-      (date) => {
-        return new Date(date.getFullYear() - 1, 0, 1);
-      },
-      (date) => {
-        return this.datePipe.transform(date, 'y');
-      }
+      (date) => new Date(date.getFullYear(), 0, 1),
+      (date) => new Date(date.getFullYear() - 1, 0, 1),
+      (date) => this.datePipe.transform(date, 'y')
     );
   }
 
