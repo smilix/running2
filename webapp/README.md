@@ -1,10 +1,8 @@
 # RunningClient2
 
-## TODO:
+## Build
 
-- [ ] Tablet/Handy Tests
-
-Nice to Have:
-
-- [ ] DateTimePicker für Firefox
-- [ ] Icons
+```shell
+npm ci
+npm run build
+```
